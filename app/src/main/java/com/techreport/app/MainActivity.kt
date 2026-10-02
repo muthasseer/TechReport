@@ -1,16 +1,37 @@
-package com.techreport.app
+package com.example.techreport
 
 import android.os.Bundle
-import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.Button
+import androidx.compose.material3.Card
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.runtime.mutableStateMapOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -21,57 +42,7 @@ private val SYSTEMS = listOf(
     "Access Control",
     "Burglar Alarm",
     "Fire Alarm",
-    "Networking / Fiber"
-)
-
-private val INSPECTION_ITEMS = mapOf(
-    "CCTV" to listOf(
-        "Cameras",
-        "NVR",
-        "HDD",
-        "Recording",
-        "UPS/Battery",
-        "PoE/Network",
-        "Cabling"
-    ),
-
-    "Access Control" to listOf(
-        "Access Control Machine/Controller",
-        "Access Control Reader",
-        "Magnetic Lock",
-        "Push Button",
-        "Emergency Release/Break Glass",
-        "Power Supply",
-        "UPS/Battery",
-        "Door Contact/Door Sensor"
-    ),
-
-    "Burglar Alarm" to listOf(
-        "Alarm Panel",
-        "PIR Sensor",
-        "Door Magnetic Contact Sensor",
-        "Keypad/Control",
-        "Siren",
-        "Battery/Power Supply",
-        "Shock Sensor"
-    ),
-
-    "Fire Alarm" to listOf(
-        "Fire Alarm Panel",
-        "Smoke Detector",
-        "Heat Detector",
-        "Manual Call Point",
-        "Sounder/Bell/Strobe",
-        "Battery/Power Supply"
-    ),
-
-    "Networking / Fiber" to listOf(
-        "Network Switch",
-        "Router/Firewall",
-        "Access Point",
-        "Fiber Link/SFP",
-        "UTP/Fiber Cabling"
-    )
+    "Networking/Fiber"
 )
 
 private val VISIT_TYPES = listOf(
@@ -95,960 +66,879 @@ private val STATUS_VALUES = listOf(
     "Fault"
 )
 
-class MainActivity : ComponentActivity() {
+private val INSPECTION_ITEMS = mapOf(
+    "CCTV" to listOf(
+        "Cameras",
+        "NVR",
+        "HDD",
+        "Recording",
+        "UPS/Battery",
+        "PoE/Network",
+        "Cabling"
+    ),
+    "Access Control" to listOf(
+        "Controller",
+        "Reader",
+        "Magnetic Lock",
+        "Push Button",
+        "Emergency Release/Break Glass",
+        "Power Supply",
+        "UPS/Battery",
+        "Door Contact/Door Sensor"
+    ),
+    "Burglar Alarm" to listOf(
+        "Alarm Panel",
+        "PIR Sensor",
+        "Door Magnetic Contact Sensor",
+        "Keypad/Control",
+        "Siren",
+        "Battery/Power Supply",
+        "Shock Sensor"
+    ),
+    "Fire Alarm" to listOf(
+        "Fire Alarm Panel",
+        "Smoke Detector",
+        "Heat Detector",
+        "Manual Call Point",
+        "Sounder/Bell/Strobe",
+        "Battery/Power Supply"
+    ),
+    "Networking/Fiber" to listOf(
+        "Network Switch",
+        "Router/Firewall",
+        "Access Point",
+        "Fiber Link/SFP",
+        "UTP/Fiber Cabling"
+    )
+)
 
-    private lateinit var db: AppDb
+@OptIn(ExperimentalMaterial3Api::class)
+class MainActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        db = AppDb(this)
-
         setContent {
-
-            MaterialTheme(
-                colorScheme = lightColorScheme(
-                    primary = Color(0xFF6A1B9A),
-                    secondary = Color(0xFF8E24AA)
-                )
-            ) {
-
+            MaterialTheme {
                 TechReportApp()
             }
         }
     }
+}
 
-    @Composable
-    private fun TechReportApp() {
+@Composable
+fun TechReportApp() {
 
-        var page by remember {
-            mutableStateOf("home")
-        }
-
-        when (page) {
-
-            "home" -> {
-                HomeScreen {
-                    page = it
-                }
-            }
-
-            "service" -> {
-                ServiceScreen {
-                    page = it
-                }
-            }
-
-            "install" -> {
-                InstallationScreen {
-                    page = it
-                }
-            }
-
-            "sites" -> {
-                ExistingSitesScreen {
-                    page = it
-                }
-            }
-
-            "profile" -> {
-                TechnicianProfileScreen {
-                    page = it
-                }
-            }
-
-            else -> {
-                HomeScreen {
-                    page = it
-                }
-            }
-        }
+    var screen by remember {
+        mutableStateOf("home")
     }
 
-    @Composable
-    private fun AppShell(
-        title: String,
-        onBack: () -> Unit,
-        content: @Composable ColumnScope.() -> Unit
-    ) {
+    when (screen) {
 
-        Scaffold(
+        "home" -> HomeScreen(
+            onService = { screen = "service" },
+            onInstallation = { screen = "installation" },
+            onSites = { screen = "sites" },
+            onProfile = { screen = "profile" }
+        )
 
-            topBar = {
+        "service" -> ServiceScreen(
+            onBack = { screen = "home" }
+        )
 
-                TopAppBar(
+        "installation" -> InstallationScreen(
+            onBack = { screen = "home" }
+        )
 
-                    title = {
-                        Text(title)
-                    },
+        "sites" -> ExistingSitesScreen(
+            onBack = { screen = "home" }
+        )
 
-                    navigationIcon = {
+        "profile" -> TechnicianProfileScreen(
+            onBack = { screen = "home" }
+        )
+    }
+}
 
-                        TextButton(
-                            onClick = onBack
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun AppShell(
+    title: String,
+    onBack: (() -> Unit)? = null,
+    content: @Composable () -> Unit
+) {
+
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                title = {
+                    Text(title)
+                },
+                navigationIcon = {
+                    if (onBack != null) {
+                        OutlinedButton(
+                            onClick = onBack,
+                            modifier = Modifier.padding(start = 8.dp)
                         ) {
-                            Text("‹")
+                            Text("Back")
                         }
                     }
-                )
-            }
-
-        ) { padding ->
-
-            Column(
-
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(padding)
-                    .padding(16.dp),
-
-                content = content
+                }
             )
         }
+    ) { padding ->
+
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(padding)
+                .padding(16.dp)
+                .verticalScroll(rememberScrollState())
+        ) {
+            content()
+        }
+    }
+}
+
+@Composable
+fun HomeScreen(
+    onService: () -> Unit,
+    onInstallation: () -> Unit,
+    onSites: () -> Unit,
+    onProfile: () -> Unit
+) {
+
+    AppShell(title = "TechReport") {
+
+        Text(
+            text = "Technician Service Manager",
+            style = MaterialTheme.typography.headlineSmall
+        )
+
+        Spacer(modifier = Modifier.height(20.dp))
+
+        HomeButton(
+            text = "Service / Troubleshooting Report",
+            onClick = onService
+        )
+
+        HomeButton(
+            text = "New Installation / Asset Report",
+            onClick = onInstallation
+        )
+
+        HomeButton(
+            text = "Existing Sites",
+            onClick = onSites
+        )
+
+        HomeButton(
+            text = "Technician Profile",
+            onClick = onProfile
+        )
+    }
+}
+
+@Composable
+fun HomeButton(
+    text: String,
+    onClick: () -> Unit
+) {
+
+    Button(
+        onClick = onClick,
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 6.dp)
+            .height(58.dp)
+    ) {
+        Text(text)
+    }
+}
+
+@Composable
+fun ServiceScreen(
+    onBack: () -> Unit
+) {
+
+    var visitType by remember {
+        mutableStateOf(VISIT_TYPES.first())
     }
 
-    @Composable
-    private fun HomeScreen(
-        navigate: (String) -> Unit
+    var serviceNumber by remember {
+        mutableStateOf(SERVICE_NUMBERS.first())
+    }
+
+    var selectedSystem by remember {
+        mutableStateOf(SYSTEMS.first())
+    }
+
+    var siteName by remember {
+        mutableStateOf("")
+    }
+
+    var jobNumber by remember {
+        mutableStateOf("")
+    }
+
+    var date by remember {
+        mutableStateOf(today())
+    }
+
+    var company by remember {
+        mutableStateOf("")
+    }
+
+    var contactNumber by remember {
+        mutableStateOf("")
+    }
+
+    var contactPerson by remember {
+        mutableStateOf("")
+    }
+
+    var address by remember {
+        mutableStateOf("")
+    }
+
+    var recommendation by remember {
+        mutableStateOf("")
+    }
+
+    val statusMap = remember {
+        mutableStateMapOf<String, String>()
+    }
+
+    val remarksMap = remember {
+        mutableStateMapOf<String, String>()
+    }
+
+    var technician1 by remember { mutableStateOf("") }
+    var technician1Epf by remember { mutableStateOf("") }
+    var technician1Signature by remember { mutableStateOf("") }
+
+    var technician2 by remember { mutableStateOf("") }
+    var technician2Epf by remember { mutableStateOf("") }
+    var technician2Signature by remember { mutableStateOf("") }
+
+    var technician3 by remember { mutableStateOf("") }
+    var technician3Epf by remember { mutableStateOf("") }
+    var technician3Signature by remember { mutableStateOf("") }
+
+    var managerName by remember { mutableStateOf("") }
+    var managerSignature by remember { mutableStateOf("") }
+    var managerDate by remember { mutableStateOf(today()) }
+
+    AppShell(
+        title = "Service Report",
+        onBack = onBack
     ) {
 
-        Scaffold(
+        Text(
+            text = "Visit Details",
+            style = MaterialTheme.typography.titleLarge
+        )
 
-            topBar = {
-                TopAppBar(
-                    title = {
-                        Text("TechReport")
-                    }
-                )
+        Spacer(modifier = Modifier.height(10.dp))
+
+        DropdownField(
+            label = "Visit Type",
+            value = visitType,
+            options = VISIT_TYPES,
+            onSelected = { visitType = it }
+        )
+
+        if (visitType == "Service") {
+
+            DropdownField(
+                label = "Service Number",
+                value = serviceNumber,
+                options = SERVICE_NUMBERS,
+                onSelected = { serviceNumber = it }
+            )
+        }
+
+        Spacer(modifier = Modifier.height(12.dp))
+
+        Text(
+            text = "Site Details",
+            style = MaterialTheme.typography.titleLarge
+        )
+
+        InputField("Site Name", siteName) {
+            siteName = it
+        }
+
+        InputField("Job Number", jobNumber) {
+            jobNumber = it
+        }
+
+        InputField("Date", date) {
+            date = it
+        }
+
+        InputField("Company / Customer", company) {
+            company = it
+        }
+
+        InputField("Contact Number", contactNumber) {
+            contactNumber = it
+        }
+
+        InputField("Contact Person", contactPerson) {
+            contactPerson = it
+        }
+
+        InputField("Address", address) {
+            address = it
+        }
+
+        Spacer(modifier = Modifier.height(12.dp))
+
+        Text(
+            text = "System",
+            style = MaterialTheme.typography.titleLarge
+        )
+
+        DropdownField(
+            label = "Select System",
+            value = selectedSystem,
+            options = SYSTEMS,
+            onSelected = {
+                selectedSystem = it
             }
+        )
 
-        ) { padding ->
+        Spacer(modifier = Modifier.height(12.dp))
 
-            Column(
+        Text(
+            text = "$selectedSystem Inspection",
+            style = MaterialTheme.typography.titleLarge
+        )
 
+        val items = INSPECTION_ITEMS[selectedSystem].orEmpty()
+
+        items.forEach { item ->
+
+            Card(
                 modifier = Modifier
-                    .fillMaxSize()
-                    .padding(padding)
-                    .padding(18.dp),
-
-                verticalArrangement = Arrangement.spacedBy(14.dp)
+                    .fillMaxWidth()
+                    .padding(vertical = 5.dp)
             ) {
 
-                Text(
-                    text = "Field Technician Service Manager",
-                    style = MaterialTheme.typography.titleMedium
-                )
-
-                HomeButton(
-                    "1. Service / Troubleshooting Report"
+                Column(
+                    modifier = Modifier.padding(12.dp)
                 ) {
-                    navigate("service")
-                }
 
-                HomeButton(
-                    "2. New Installation / Asset Report"
-                ) {
-                    navigate("install")
-                }
+                    Text(
+                        text = item,
+                        style = MaterialTheme.typography.titleMedium
+                    )
 
-                HomeButton(
-                    "3. Existing Sites"
-                ) {
-                    navigate("sites")
-                }
+                    Spacer(modifier = Modifier.height(8.dp))
 
-                HomeButton(
-                    "4. Technician Profile"
-                ) {
-                    navigate("profile")
+                    DropdownField(
+                        label = "Status",
+                        value = statusMap[item] ?: "Good",
+                        options = STATUS_VALUES,
+                        onSelected = {
+                            statusMap[item] = it
+                        }
+                    )
+
+                    InputField(
+                        label = "Remarks",
+                        value = remarksMap[item] ?: ""
+                    ) {
+                        remarksMap[item] = it
+                    }
                 }
             }
         }
+
+        Spacer(modifier = Modifier.height(12.dp))
+
+        Text(
+            text = "Recommendation",
+            style = MaterialTheme.typography.titleLarge
+        )
+
+        InputField(
+            label = "Recommendation",
+            value = recommendation
+        ) {
+            recommendation = it
+        }
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        Text(
+            text = "Technician 1",
+            style = MaterialTheme.typography.titleLarge
+        )
+
+        InputField("Name", technician1) {
+            technician1 = it
+        }
+
+        InputField("EPF", technician1Epf) {
+            technician1Epf = it
+        }
+
+        InputField("Signature", technician1Signature) {
+            technician1Signature = it
+        }
+
+        Spacer(modifier = Modifier.height(10.dp))
+
+        Text(
+            text = "Technician 2",
+            style = MaterialTheme.typography.titleLarge
+        )
+
+        InputField("Name", technician2) {
+            technician2 = it
+        }
+
+        InputField("EPF", technician2Epf) {
+            technician2Epf = it
+        }
+
+        InputField("Signature", technician2Signature) {
+            technician2Signature = it
+        }
+
+        Spacer(modifier = Modifier.height(10.dp))
+
+        Text(
+            text = "Technician 3",
+            style = MaterialTheme.typography.titleLarge
+        )
+
+        InputField("Name", technician3) {
+            technician3 = it
+        }
+
+        InputField("EPF", technician3Epf) {
+            technician3Epf = it
+        }
+
+        InputField("Signature", technician3Signature) {
+            technician3Signature = it
+        }
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        Text(
+            text = "Manager Approval",
+            style = MaterialTheme.typography.titleLarge
+        )
+
+        InputField("Manager / Boss Name", managerName) {
+            managerName = it
+        }
+
+        InputField("Manager Signature", managerSignature) {
+            managerSignature = it
+        }
+
+        InputField("Approval Date", managerDate) {
+            managerDate = it
+        }
+
+        Spacer(modifier = Modifier.height(20.dp))
+
+        Button(
+            onClick = {
+
+                Pdf.service(
+                    siteName = siteName,
+                    jobNumber = jobNumber,
+                    date = date,
+                    company = company,
+                    contactNumber = contactNumber,
+                    contactPerson = contactPerson,
+                    address = address,
+                    visitType = visitType,
+                    serviceNumber = serviceNumber,
+                    system = selectedSystem,
+                    recommendation = recommendation
+                )
+
+            },
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Text("Save & Generate PDF")
+        }
+    }
+}
+
+@Composable
+fun InstallationScreen(
+    onBack: () -> Unit
+) {
+
+    var selectedSystem by remember {
+        mutableStateOf(SYSTEMS.first())
     }
 
-    @Composable
-    private fun HomeButton(
-        text: String,
-        onClick: () -> Unit
+    var siteName by remember {
+        mutableStateOf("")
+    }
+
+    var jobNumber by remember {
+        mutableStateOf("")
+    }
+
+    var date by remember {
+        mutableStateOf(today())
+    }
+
+    var company by remember {
+        mutableStateOf("")
+    }
+
+    var contactNumber by remember {
+        mutableStateOf("")
+    }
+
+    var contactPerson by remember {
+        mutableStateOf("")
+    }
+
+    var address by remember {
+        mutableStateOf("")
+    }
+
+    var deviceType by remember {
+        mutableStateOf("")
+    }
+
+    var brand by remember {
+        mutableStateOf("")
+    }
+
+    var model by remember {
+        mutableStateOf("")
+    }
+
+    var serial by remember {
+        mutableStateOf("")
+    }
+
+    var ip by remember {
+        mutableStateOf("")
+    }
+
+    var location by remember {
+        mutableStateOf("")
+    }
+
+    var quantity by remember {
+        mutableStateOf("1")
+    }
+
+    var installationDate by remember {
+        mutableStateOf(today())
+    }
+
+    var remarks by remember {
+        mutableStateOf("")
+    }
+
+    val assets = remember {
+        mutableStateListOf<String>()
+    }
+
+    AppShell(
+        title = "Installation / Asset Register",
+        onBack = onBack
+    ) {
+
+        Text(
+            text = "Site Details",
+            style = MaterialTheme.typography.titleLarge
+        )
+
+        InputField("Site Name", siteName) {
+            siteName = it
+        }
+
+        InputField("Job Number", jobNumber) {
+            jobNumber = it
+        }
+
+        InputField("Date", date) {
+            date = it
+        }
+
+        InputField("Company / Customer", company) {
+            company = it
+        }
+
+        InputField("Contact Number", contactNumber) {
+            contactNumber = it
+        }
+
+        InputField("Contact Person", contactPerson) {
+            contactPerson = it
+        }
+
+        InputField("Address", address) {
+            address = it
+        }
+
+        Spacer(modifier = Modifier.height(12.dp))
+
+        Text(
+            text = "System",
+            style = MaterialTheme.typography.titleLarge
+        )
+
+        DropdownField(
+            label = "Select System",
+            value = selectedSystem,
+            options = SYSTEMS,
+            onSelected = {
+                selectedSystem = it
+            }
+        )
+
+        Spacer(modifier = Modifier.height(12.dp))
+
+        Text(
+            text = "Add Device",
+            style = MaterialTheme.typography.titleLarge
+        )
+
+        InputField("Device Type", deviceType) {
+            deviceType = it
+        }
+
+        InputField("Brand", brand) {
+            brand = it
+        }
+
+        InputField("Model", model) {
+            model = it
+        }
+
+        InputField("Serial Number", serial) {
+            serial = it
+        }
+
+        InputField("IP Address", ip) {
+            ip = it
+        }
+
+        InputField("Location", location) {
+            location = it
+        }
+
+        InputField("Quantity", quantity) {
+            quantity = it
+        }
+
+        InputField("Installation Date", installationDate) {
+            installationDate = it
+        }
+
+        InputField("Remarks", remarks) {
+            remarks = it
+        }
+
+        Button(
+            onClick = {
+
+                val device = buildString {
+
+                    append("System: ")
+                    append(selectedSystem)
+
+                    append(" | Device: ")
+                    append(deviceType)
+
+                    append(" | Brand: ")
+                    append(brand)
+
+                    append(" | Model: ")
+                    append(model)
+
+                    append(" | Serial: ")
+                    append(serial)
+
+                    append(" | IP: ")
+                    append(ip)
+
+                    append(" | Location: ")
+                    append(location)
+
+                    append(" | Qty: ")
+                    append(quantity)
+
+                    append(" | Installation Date: ")
+                    append(installationDate)
+
+                    append(" | Remarks: ")
+                    append(remarks)
+                }
+
+                assets.add(device)
+
+                deviceType = ""
+                brand = ""
+                model = ""
+                serial = ""
+                ip = ""
+                location = ""
+                quantity = "1"
+                remarks = ""
+
+            },
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Text("Add Device")
+        }
+
+        Spacer(modifier = Modifier.height(12.dp))
+
+        Text(
+            text = "Added Devices: ${assets.size}",
+            style = MaterialTheme.typography.titleMedium
+        )
+
+        assets.forEachIndexed { index, asset ->
+
+            Card(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 4.dp)
+            ) {
+
+                Column(
+                    modifier = Modifier.padding(12.dp)
+                ) {
+
+                    Text(
+                        text = "${index + 1}. $asset"
+                    )
+
+                    Spacer(modifier = Modifier.height(6.dp))
+
+                    OutlinedButton(
+                        onClick = {
+                            assets.removeAt(index)
+                        }
+                    ) {
+                        Text("Remove")
+                    }
+                }
+            }
+        }
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        Button(
+            onClick = {
+
+                Pdf.installation(
+                    siteName = siteName,
+                    jobNumber = jobNumber,
+                    date = date,
+                    company = company,
+                    contactNumber = contactNumber,
+                    contactPerson = contactPerson,
+                    address = address,
+                    system = selectedSystem,
+                    assets = assets.toList()
+                )
+
+            },
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Text("Save & Generate PDF")
+        }
+    }
+}
+
+@Composable
+fun ExistingSitesScreen(
+    onBack: () -> Unit
+) {
+
+    val sites = remember {
+        mutableStateListOf<String>()
+    }
+
+    var showDialog by remember {
+        mutableStateOf(false)
+    }
+
+    var siteName by remember {
+        mutableStateOf("")
+    }
+
+    var company by remember {
+        mutableStateOf("")
+    }
+
+    var contactNumber by remember {
+        mutableStateOf("")
+    }
+
+    var address by remember {
+        mutableStateOf("")
+    }
+
+    AppShell(
+        title = "Existing Sites",
+        onBack = onBack
     ) {
 
         Button(
-
-            onClick = onClick,
-
-            modifier = Modifier
-                .fillMaxWidth()
+            onClick = {
+                showDialog = true
+            },
+            modifier = Modifier.fillMaxWidth()
         ) {
-
-            Text(text)
-        }
-    }
-
-    @Composable
-    private fun ServiceScreen(
-        navigate: (String) -> Unit
-    ) {
-
-        val sites = db.sites()
-
-        var selectedSite by remember {
-            mutableStateOf(sites.firstOrNull())
+            Text("Add Existing Site")
         }
 
-        var visitType by remember {
-            mutableStateOf("Service")
-        }
+        Spacer(modifier = Modifier.height(12.dp))
 
-        var serviceNumber by remember {
-            mutableStateOf("1st")
-        }
-
-        var selectedSystem by remember {
-            mutableStateOf(SYSTEMS.first())
-        }
-
-        var recommendation by remember {
-            mutableStateOf("")
-        }
-
-        val statusMap = remember(selectedSystem) {
-
-            mutableStateMapOf<String, String>().apply {
-
-                INSPECTION_ITEMS[selectedSystem]
-                    .orEmpty()
-                    .forEach { item ->
-
-                        put(
-                            item,
-                            "Good"
-                        )
-                    }
-            }
-        }
-
-        val remarksMap = remember(selectedSystem) {
-
-            mutableStateMapOf<String, String>().apply {
-
-                INSPECTION_ITEMS[selectedSystem]
-                    .orEmpty()
-                    .forEach { item ->
-
-                        put(
-                            item,
-                            ""
-                        )
-                    }
-            }
-        }
-
-        AppShell(
-
-            title = "Service / Troubleshooting",
-
-            onBack = {
-                navigate("home")
-            }
-
-        ) {
+        if (sites.isEmpty()) {
 
             Text(
-                text = "Site",
-                style = MaterialTheme.typography.titleMedium
+                text = "No sites saved yet."
             )
 
-            Spacer(
-                modifier = Modifier.height(6.dp)
-            )
+        } else {
 
-            if (sites.isEmpty()) {
+            sites.forEachIndexed { index, site ->
 
-                Text(
-                    "No sites yet. Please create a site first."
-                )
-
-            } else {
-
-                sites.forEach { site ->
-
-                    Row(
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
-
-                        RadioButton(
-
-                            selected =
-                                selectedSite?.id == site.id,
-
-                            onClick = {
-                                selectedSite = site
-                            }
-                        )
-
-                        Text(
-                            text = site.name,
-
-                            modifier = Modifier
-                                .padding(top = 12.dp)
-                        )
-                    }
-                }
-            }
-
-            DropdownField(
-                label = "Visit Type",
-                value = visitType,
-                options = VISIT_TYPES
-            ) {
-
-                visitType = it
-            }
-
-            if (visitType == "Service") {
-
-                DropdownField(
-                    label = "Service Number",
-                    value = serviceNumber,
-                    options = SERVICE_NUMBERS
+                Card(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 5.dp)
                 ) {
 
-                    serviceNumber = it
-                }
-            }
-
-            DropdownField(
-                label = "System",
-                value = selectedSystem,
-                options = SYSTEMS
-            ) {
-
-                selectedSystem = it
-            }
-
-            Spacer(
-                modifier = Modifier.height(8.dp)
-            )
-
-            Text(
-                text = "Inspection",
-                style = MaterialTheme.typography.titleMedium
-            )
-
-            INSPECTION_ITEMS[selectedSystem]
-                .orEmpty()
-                .forEach { item ->
-
-                    Card(
-
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(vertical = 4.dp)
+                    Column(
+                        modifier = Modifier.padding(12.dp)
                     ) {
-
-                        Column(
-                            modifier = Modifier.padding(10.dp)
-                        ) {
-
-                            Text(item)
-
-                            Row {
-
-                                STATUS_VALUES.forEach { status ->
-
-                                    RadioButton(
-
-                                        selected =
-                                            statusMap[item] == status,
-
-                                        onClick = {
-                                            statusMap[item] = status
-                                        }
-                                    )
-
-                                    Text(
-                                        text = status,
-
-                                        modifier = Modifier
-                                            .padding(
-                                                top = 12.dp,
-                                                end = 4.dp
-                                            )
-                                    )
-                                }
-                            }
-
-                            InputField(
-                                value =
-                                    remarksMap[item]
-                                        .orEmpty(),
-
-                                label = "Remarks"
-                            ) {
-
-                                remarksMap[item] = it
-                            }
-                        }
-                    }
-                }
-
-            InputField(
-                value = recommendation,
-                label = "Recommendation"
-            ) {
-
-                recommendation = it
-            }
-
-            Spacer(
-                modifier = Modifier.height(8.dp)
-            )
-
-            Button(
-
-                onClick = {
-
-                    val site = selectedSite
-
-                    if (site == null) {
-
-                        Toast.makeText(
-                            this@MainActivity,
-                            "Please create/select a site first",
-                            Toast.LENGTH_LONG
-                        ).show()
-
-                        return@Button
-                    }
-
-                    val report = ServiceReport(
-
-                        siteId = site.id,
-
-                        visitType = visitType,
-
-                        serviceNo =
-                            if (visitType == "Service") {
-                                serviceNumber
-                            } else {
-                                ""
-                            },
-
-                        system = selectedSystem,
-
-                        recommendation =
-                            recommendation,
-
-                        date = today()
-                    )
-
-                    val reportId =
-                        db.addService(report)
-
-                    val savedReport =
-                        report.copy(
-                            id = reportId
-                        )
-
-                    val inspections =
-                        INSPECTION_ITEMS[selectedSystem]
-                            .orEmpty()
-                            .map { item ->
-
-                                Inspection(
-
-                                    item = item,
-
-                                    status =
-                                        statusMap[item]
-                                            .orEmpty(),
-
-                                    remarks =
-                                        remarksMap[item]
-                                            .orEmpty()
-                                )
-                            }
-
-                    Pdf.service(
-
-                        ctx = this@MainActivity,
-
-                        site = site,
-
-                        r = savedReport,
-
-                        items = inspections
-                    )
-
-                    Toast.makeText(
-                        this@MainActivity,
-                        "Service report saved and PDF created",
-                        Toast.LENGTH_LONG
-                    ).show()
-
-                    navigate("home")
-                },
-
-                modifier = Modifier.fillMaxWidth()
-            ) {
-
-                Text(
-                    "Save Report & Generate PDF"
-                )
-            }
-        }
-    }
-
-    @Composable
-    private fun InstallationScreen(
-        navigate: (String) -> Unit
-    ) {
-
-        val sites = db.sites()
-
-        var selectedSite by remember {
-            mutableStateOf(sites.firstOrNull())
-        }
-
-        var selectedSystem by remember {
-            mutableStateOf(SYSTEMS.first())
-        }
-
-        var deviceType by remember {
-
-            mutableStateOf(
-                INSPECTION_ITEMS[
-                    SYSTEMS.first()
-                ]
-                    .orEmpty()
-                    .first()
-            )
-        }
-
-        var brand by remember {
-            mutableStateOf("")
-        }
-
-        var model by remember {
-            mutableStateOf("")
-        }
-
-        var serial by remember {
-            mutableStateOf("")
-        }
-
-        var ip by remember {
-            mutableStateOf("")
-        }
-
-        var location by remember {
-            mutableStateOf("")
-        }
-
-        var quantity by remember {
-            mutableStateOf("1")
-        }
-
-        var installationDate by remember {
-            mutableStateOf(today())
-        }
-
-        var remarks by remember {
-            mutableStateOf("")
-        }
-
-        var secret by remember {
-            mutableStateOf("")
-        }
-
-        var assets by remember {
-            mutableStateOf(
-                listOf<Asset>()
-            )
-        }
-
-        AppShell(
-
-            title = "Installation / Asset Register",
-
-            onBack = {
-                navigate("home")
-            }
-
-        ) {
-
-            Text(
-                text = "Site",
-                style = MaterialTheme.typography.titleMedium
-            )
-
-            if (sites.isEmpty()) {
-
-                Text(
-                    "No sites yet. Please create a site first."
-                )
-
-            } else {
-
-                sites.forEach { site ->
-
-                    Row(
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
-
-                        RadioButton(
-
-                            selected =
-                                selectedSite?.id == site.id,
-
-                            onClick = {
-                                selectedSite = site
-                            }
-                        )
 
                         Text(
-                            text = site.name,
-
-                            modifier = Modifier
-                                .padding(top = 12.dp)
+                            text = site,
+                            style = MaterialTheme.typography.titleMedium
                         )
-                    }
-                }
-            }
 
-            DropdownField(
-                label = "System",
-                value = selectedSystem,
-                options = SYSTEMS
-            ) {
+                        Spacer(modifier = Modifier.height(6.dp))
 
-                selectedSystem = it
-
-                deviceType =
-                    INSPECTION_ITEMS[it]
-                        .orEmpty()
-                        .first()
-            }
-
-            DropdownField(
-                label = "Device Type",
-                value = deviceType,
-                options =
-                    INSPECTION_ITEMS[
-                        selectedSystem
-                    ].orEmpty()
-            ) {
-
-                deviceType = it
-            }
-
-            InputField(
-                brand,
-                "Brand"
-            ) {
-                brand = it
-            }
-
-            InputField(
-                model,
-                "Model"
-            ) {
-                model = it
-            }
-
-            InputField(
-                serial,
-                "Serial Number"
-            ) {
-                serial = it
-            }
-
-            InputField(
-                ip,
-                "IP Address (if applicable)"
-            ) {
-                ip = it
-            }
-
-            InputField(
-                location,
-                "Location"
-            ) {
-                location = it
-            }
-
-            InputField(
-                quantity,
-                "Quantity"
-            ) {
-                quantity = it
-            }
-
-            InputField(
-                installationDate,
-                "Installation Date"
-            ) {
-                installationDate = it
-            }
-
-            InputField(
-                remarks,
-                "Remarks"
-            ) {
-                remarks = it
-            }
-
-            InputField(
-                secret,
-                "Device / NVR / Camera Password"
-            ) {
-                secret = it
-            }
-
-            Button(
-
-                onClick = {
-
-                    val site = selectedSite
-
-                    if (site == null) {
-
-                        Toast.makeText(
-                            this@MainActivity,
-                            "Please create/select a site first",
-                            Toast.LENGTH_LONG
-                        ).show()
-
-                        return@Button
-                    }
-
-                    val newAsset = Asset(
-
-                        siteId = site.id,
-
-                        system = selectedSystem,
-
-                        type = deviceType,
-
-                        brand = brand,
-
-                        model = model,
-
-                        serial = serial,
-
-                        ip = ip,
-
-                        location = location,
-
-                        qty =
-                            quantity.toIntOrNull()
-                                ?: 1,
-
-                        installDate =
-                            installationDate,
-
-                        remarks =
-                            remarks,
-
-                        secret =
-                            secret
-                    )
-
-                    assets =
-                        assets + newAsset
-
-                    brand = ""
-                    model = ""
-                    serial = ""
-                    ip = ""
-                    location = ""
-                    quantity = "1"
-                    remarks = ""
-                    secret = ""
-                },
-
-                modifier = Modifier.fillMaxWidth()
-            ) {
-
-                Text(
-                    "Add Device"
-                )
-            }
-
-            Spacer(
-                modifier = Modifier.height(8.dp)
-            )
-
-            Text(
-                "Devices added: ${assets.size}"
-            )
-
-            Spacer(
-                modifier = Modifier.height(8.dp)
-            )
-
-            Button(
-
-                onClick = {
-
-                    val site = selectedSite
-
-                    if (
-                        site == null ||
-                        assets.isEmpty()
-                    ) {
-
-                        Toast.makeText(
-                            this@MainActivity,
-                            "Select a site and add at least one device",
-                            Toast.LENGTH_LONG
-                        ).show()
-
-                        return@Button
-                    }
-
-                    assets.forEach { asset ->
-
-                        db.addAsset(asset)
-                    }
-
-                    Pdf.installation(
-
-                        ctx = this@MainActivity,
-
-                        site = site,
-
-                        system = selectedSystem,
-
-                        assets = assets
-                    )
-
-                    Toast.makeText(
-                        this@MainActivity,
-                        "Asset register saved and PDF created",
-                        Toast.LENGTH_LONG
-                    ).show()
-
-                    navigate("home")
-                },
-
-                modifier = Modifier.fillMaxWidth()
-            ) {
-
-                Text(
-                    "Save Asset Register & Generate PDF"
-                )
-            }
-        }
-    }
-
-    @Composable
-    private fun ExistingSitesScreen(
-        navigate: (String) -> Unit
-    ) {
-
-        var showDialog by remember {
-            mutableStateOf(false)
-        }
-
-        var refresh by remember {
-            mutableStateOf(0)
-        }
-
-        var name by remember {
-            mutableStateOf("")
-        }
-
-        var job by remember {
-            mutableStateOf("")
-        }
-
-        var customer by remember {
-            mutableStateOf("")
-        }
-
-        var person by remember {
-            mutableStateOf("")
-        }
-
-        var phone by remember {
-            mutableStateOf("")
-        }
-
-        var address by remember {
-            mutableStateOf("")
-        }
-
-        val sites =
-            remember(refresh) {
-                db.sites()
-            }
-
-        AppShell(
-
-            title = "Existing Sites",
-
-            onBack = {
-                navigate("home")
-            }
-
-        ) {
-
-            Button(
-                onClick = {
-                    showDialog = true
-                }
-            ) {
-
-                Text(
-                    "+ Add Site"
-                )
-            }
-
-            Spacer(
-                modifier = Modifier.height(8.dp)
-            )
-
-            LazyColumn(
-
-                verticalArrangement =
-                    Arrangement.spacedBy(8.dp)
-            ) {
-
-                items(sites) { site ->
-
-                    Card(
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
-
-                        Column(
-                            modifier =
-                                Modifier.padding(12.dp)
+                        OutlinedButton(
+                            onClick = {
+                                sites.removeAt(index)
+                            }
                         ) {
-
-                            Text(
-                                site.name,
-                                style =
-                                    MaterialTheme
-                                        .typography
-                                        .titleMedium
-                            )
-
-                            Text(
-                                "Job: ${site.job}"
-                            )
-
-                            Text(
-                                "Customer: ${site.customer}"
-                            )
-
-                            Text(
-                                "Contact: ${site.person} / ${site.phone}"
-                            )
-
-                            Text(
-                                site.address
-                            )
+                            Text("Remove")
                         }
                     }
                 }
@@ -1057,349 +947,238 @@ class MainActivity : ComponentActivity() {
 
         if (showDialog) {
 
-            AlertDialog(
+            Card(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 20.dp)
+            ) {
 
-                onDismissRequest = {
-                    showDialog = false
-                },
+                Column(
+                    modifier = Modifier.padding(16.dp)
+                ) {
 
-                title = {
                     Text(
-                        "New Site"
-                    )
-                },
-
-                text = {
-
-                    Column {
-
-                        InputField(
-                            name,
-                            "Site Name"
-                        ) {
-                            name = it
-                        }
-
-                        InputField(
-                            job,
-                            "Job Number"
-                        ) {
-                            job = it
-                        }
-
-                        InputField(
-                            customer,
-                            "Company / Customer"
-                        ) {
-                            customer = it
-                        }
-
-                        InputField(
-                            person,
-                            "Contact Person"
-                        ) {
-                            person = it
-                        }
-
-                        InputField(
-                            phone,
-                            "Contact Number"
-                        ) {
-                            phone = it
-                        }
-
-                        InputField(
-                            address,
-                            "Address"
-                        ) {
-                            address = it
-                        }
-                    }
-                },
-
-                confirmButton = {
-
-                    Button(
-
-                        onClick = {
-
-                            db.addSite(
-
-                                Site(
-
-                                    name = name,
-
-                                    job = job,
-
-                                    customer = customer,
-
-                                    person = person,
-
-                                    phone = phone,
-
-                                    address = address
-                                )
-                            )
-
-                            name = ""
-                            job = ""
-                            customer = ""
-                            person = ""
-                            phone = ""
-                            address = ""
-
-                            showDialog = false
-
-                            refresh++
-                        }
-                    ) {
-
-                        Text(
-                            "Save"
-                        )
-                    }
-                },
-
-                dismissButton = {
-
-                    TextButton(
-
-                        onClick = {
-                            showDialog = false
-                        }
-
-                    ) {
-
-                        Text(
-                            "Cancel"
-                        )
-                    }
-                }
-            )
-        }
-    }
-
-    @Composable
-    private fun TechnicianProfileScreen(
-        navigate: (String) -> Unit
-    ) {
-
-        var company by remember {
-            mutableStateOf("")
-        }
-
-        var technicianName by remember {
-            mutableStateOf("")
-        }
-
-        var email by remember {
-            mutableStateOf("")
-        }
-
-        var phone by remember {
-            mutableStateOf("")
-        }
-
-        var epf by remember {
-            mutableStateOf("")
-        }
-
-        var password by remember {
-            mutableStateOf("")
-        }
-
-        AppShell(
-
-            title = "Technician Profile",
-
-            onBack = {
-                navigate("home")
-            }
-
-        ) {
-
-            InputField(
-                company,
-                "Company Name"
-            ) {
-                company = it
-            }
-
-            InputField(
-                technicianName,
-                "Technician Name"
-            ) {
-                technicianName = it
-            }
-
-            InputField(
-                email,
-                "Email"
-            ) {
-                email = it
-            }
-
-            InputField(
-                phone,
-                "Phone Number"
-            ) {
-                phone = it
-            }
-
-            InputField(
-                epf,
-                "EPF Number"
-            ) {
-                epf = it
-            }
-
-            InputField(
-                password,
-                "Password"
-            ) {
-                password = it
-            }
-
-            Button(
-
-                onClick = {
-
-                    db.saveTechnician(
-
-                        company,
-
-                        technicianName,
-
-                        email,
-
-                        phone,
-
-                        epf,
-
-                        password
+                        text = "New Site",
+                        style = MaterialTheme.typography.titleLarge
                     )
 
-                    Toast.makeText(
+                    InputField("Site Name", siteName) {
+                        siteName = it
+                    }
 
-                        this@MainActivity,
+                    InputField("Company / Customer", company) {
+                        company = it
+                    }
 
-                        "Technician profile saved",
+                    InputField("Contact Number", contactNumber) {
+                        contactNumber = it
+                    }
 
-                        Toast.LENGTH_SHORT
+                    InputField("Address", address) {
+                        address = it
+                    }
 
-                    ).show()
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+
+                        Button(
+                            onClick = {
+                                showDialog = false
+                            },
+                            modifier = Modifier.weight(1f)
+                        ) {
+                            Text("Cancel")
+                        }
+
+                        Button(
+                            onClick = {
+
+                                if (siteName.isNotBlank()) {
+
+                                    sites.add(
+                                        "$siteName | $company | $contactNumber | $address"
+                                    )
+
+                                    siteName = ""
+                                    company = ""
+                                    contactNumber = ""
+                                    address = ""
+
+                                    showDialog = false
+                                }
+
+                            },
+                            modifier = Modifier.weight(1f)
+                        ) {
+                            Text("Save")
+                        }
+                    }
                 }
-
-            ) {
-
-                Text(
-                    "Save Profile"
-                )
             }
         }
     }
+}
 
-    @Composable
-    private fun InputField(
-        value: String,
-        label: String,
-        onValueChange: (String) -> Unit
+@Composable
+fun TechnicianProfileScreen(
+    onBack: () -> Unit
+) {
+
+    var companyName by remember {
+        mutableStateOf("")
+    }
+
+    var technicianName by remember {
+        mutableStateOf("")
+    }
+
+    var email by remember {
+        mutableStateOf("")
+    }
+
+    var phone by remember {
+        mutableStateOf("")
+    }
+
+    var epf by remember {
+        mutableStateOf("")
+    }
+
+    var password by remember {
+        mutableStateOf("")
+    }
+
+    var saved by remember {
+        mutableStateOf(false)
+    }
+
+    AppShell(
+        title = "Technician Profile",
+        onBack = onBack
     ) {
 
-        OutlinedTextField(
+        InputField("Company Name", companyName) {
+            companyName = it
+        }
 
-            value = value,
+        InputField("Technician Name", technicianName) {
+            technicianName = it
+        }
 
-            onValueChange = onValueChange,
+        InputField("Email", email) {
+            email = it
+        }
 
-            label = {
-                Text(label)
+        InputField("Phone", phone) {
+            phone = it
+        }
+
+        InputField("EPF", epf) {
+            epf = it
+        }
+
+        InputField("Password", password) {
+            password = it
+        }
+
+        Button(
+            onClick = {
+                saved = true
             },
-
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(vertical = 4.dp),
-
-            singleLine = true
-        )
-    }
-
-    @Composable
-    private fun DropdownField(
-        label: String,
-        value: String,
-        options: List<String>,
-        onSelected: (String) -> Unit
-    ) {
-
-        var expanded by remember {
-            mutableStateOf(false)
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Text("Save Profile")
         }
 
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(vertical = 4.dp)
-        ) {
+        if (saved) {
+
+            Spacer(modifier = Modifier.height(12.dp))
 
             Text(
-                label,
-                style =
-                    MaterialTheme
-                        .typography
-                        .labelMedium
+                text = "Profile saved.",
+                color = MaterialTheme.colorScheme.primary
             )
+        }
+    }
+}
 
-            OutlinedButton(
+@Composable
+fun InputField(
+    label: String,
+    value: String,
+    onValueChange: (String) -> Unit
+) {
 
-                onClick = {
-                    expanded = true
-                },
+    OutlinedTextField(
+        value = value,
+        onValueChange = onValueChange,
+        label = {
+            Text(label)
+        },
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 5.dp),
+        singleLine = false
+    )
+}
 
-                modifier =
-                    Modifier.fillMaxWidth()
-            ) {
+@Composable
+fun DropdownField(
+    label: String,
+    value: String,
+    options: List<String>,
+    onSelected: (String) -> Unit
+) {
 
-                Text(
-                    value
-                )
+    var expanded by remember {
+        mutableStateOf(false)
+    }
+
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 5.dp)
+    ) {
+
+        OutlinedButton(
+            onClick = {
+                expanded = true
+            },
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Text("$label: $value")
+        }
+
+        DropdownMenu(
+            expanded = expanded,
+            onDismissRequest = {
+                expanded = false
             }
+        ) {
 
-            DropdownMenu(
+            options.forEach { option ->
 
-                expanded = expanded,
+                DropdownMenuItem(
+                    text = {
+                        Text(option)
+                    },
+                    onClick = {
 
-                onDismissRequest = {
-                    expanded = false
-                }
-
-            ) {
-
-                options.forEach { option ->
-
-                    DropdownMenuItem(
-
-                        text = {
-                            Text(option)
-                        },
-
-                        onClick = {
-
-                            onSelected(option)
-
-                            expanded = false
-                        }
-                    )
-                }
+                        onSelected(option)
+                        expanded = false
+                    }
+                )
             }
         }
     }
+}
 
-    private fun today(): String {
+fun today(): String {
 
-        return SimpleDateFormat(
-            "yyyy-MM-dd",
-            Locale.getDefault()
-        ).format(Date())
-    }
+    return SimpleDateFormat(
+        "yyyy-MM-dd",
+        Locale.getDefault()
+    ).format(Date())
 }
