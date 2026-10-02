@@ -1,223 +1,29 @@
 package com.techreport.app
 
-import android.content.Context
-import android.graphics.Color
 import android.graphics.Paint
 import android.graphics.Typeface
 import android.graphics.pdf.PdfDocument
+import android.os.Environment
 import java.io.File
+import java.io.FileOutputStream
 
 object Pdf {
-
-    fun service(
-        ctx: Context,
-        site: Site,
-        r: ServiceReport,
-        items: List<Inspection>
-    ): File {
-
-        val doc = PdfDocument()
-
-        val page = doc.startPage(
-            PdfDocument.PageInfo.Builder(595, 842, 1).create()
-        )
-
-        val canvas = page.canvas
-
-        val titlePaint = Paint().apply {
-            color = Color.rgb(106, 27, 154)
-            textSize = 22f
-            typeface = Typeface.DEFAULT_BOLD
-        }
-
-        val textPaint = Paint().apply {
-            color = Color.DKGRAY
-            textSize = 11f
-        }
-
-        canvas.drawText(
-            "TechReport - Service Report",
-            32f,
-            45f,
-            titlePaint
-        )
-
-        var y = 72f
-
-        val header = listOf(
-            "Site: ${site.name}",
-            "Job No: ${site.job}",
-            "Customer: ${site.customer}",
-            "Visit: ${r.visitType} ${
-                if (r.serviceNo.isNotBlank()) "- ${r.serviceNo}" else ""
-            }",
-            "System: ${r.system}",
-            "Date: ${r.date}"
-        )
-
-        for (line in header) {
-            canvas.drawText(line, 32f, y, textPaint)
-            y += 18f
-        }
-
-        y += 8f
-
-        canvas.drawText("Inspection", 32f, y, textPaint)
-        y += 20f
-
-        for (item in items) {
-            if (y > 790f) break
-
-            canvas.drawText(
-                "${item.item}: ${item.status}  ${item.remarks}",
-                38f,
-                y,
-                textPaint
-            )
-
-            y += 17f
-        }
-
-        if (y < 810f) {
-            y += 12f
-
-            canvas.drawText(
-                "Recommendation: ${r.recommendation}",
-                32f,
-                y,
-                textPaint
-            )
-        }
-
-        doc.finishPage(page)
-
-        return save(
-            ctx,
-            doc,
-            "service_${r.id}.pdf"
-        )
-    }
-
-    fun installation(
-        ctx: Context,
-        site: Site,
-        system: String,
-        assets: List<Asset>
-    ): File {
-
-        val doc = PdfDocument()
-
-        val page = doc.startPage(
-            PdfDocument.PageInfo.Builder(595, 842, 1).create()
-        )
-
-        val canvas = page.canvas
-
-        val titlePaint = Paint().apply {
-            color = Color.rgb(106, 27, 154)
-            textSize = 20f
-            typeface = Typeface.DEFAULT_BOLD
-        }
-
-        val textPaint = Paint().apply {
-            color = Color.DKGRAY
-            textSize = 10f
-        }
-
-        canvas.drawText(
-            "TechReport - Installation / Asset Register",
-            25f,
-            45f,
-            titlePaint
-        )
-
-        var y = 72f
-
-        canvas.drawText(
-            "Site: ${site.name}   Job: ${site.job}",
-            25f,
-            y,
-            textPaint
-        )
-
-        y += 18f
-
-        canvas.drawText(
-            "Customer: ${site.customer}   System: $system",
-            25f,
-            y,
-            textPaint
-        )
-
-        y += 25f
-
-        for (asset in assets) {
-
-            if (y > 780f) break
-
-            canvas.drawText(
-                "${asset.type} | ${asset.brand} ${asset.model}",
-                25f,
-                y,
-                textPaint
-            )
-
-            y += 16f
-
-            canvas.drawText(
-                "S/N: ${asset.serial} | IP: ${asset.ip}",
-                32f,
-                y,
-                textPaint
-            )
-
-            y += 16f
-
-            canvas.drawText(
-                "Location: ${asset.location}  Qty: ${asset.qty}",
-                32f,
-                y,
-                textPaint
-            )
-
-            y += 16f
-
-            canvas.drawText(
-                "Date: ${asset.installDate}  ${asset.remarks}",
-                32f,
-                y,
-                textPaint
-            )
-
-            y += 20f
-        }
-
-        doc.finishPage(page)
-
-        return save(
-            ctx,
-            doc,
-            "installation_${site.id}.pdf"
-        )
-    }
-
-    private fun save(
-        ctx: Context,
-        document: PdfDocument,
-        name: String
-    ): File {
-
-        val file = File(
-            ctx.getExternalFilesDir(null),
-            name
-        )
-
-        file.outputStream().use {
-            document.writeTo(it)
-        }
-
-        document.close()
-
-        return file
-    }
+ fun service(siteName:String,jobNumber:String,date:String,company:String,contactNumber:String,contactPerson:String,address:String,visitType:String,serviceNumber:String,system:String,recommendation:String){
+  val d=PdfDocument();val page=d.startPage(PdfDocument.PageInfo.Builder(595,842,1).create());val c=page.canvas;val p=Paint();p.textSize=12f
+  p.typeface=Typeface.DEFAULT_BOLD;p.textSize=20f;c.drawText("TECHREPORT SERVICE REPORT",40f,50f,p);p.typeface=Typeface.DEFAULT;p.textSize=12f;var y=85f
+  fun line(a:String,b:String){c.drawText("$a: $b",40f,y,p);y+=21f}
+  line("Site Name",siteName);line("Job Number",jobNumber);line("Date",date);line("Company / Customer",company);line("Contact Number",contactNumber);line("Contact Person",contactPerson);line("Address",address);line("Visit Type",visitType);if(visitType=="Service")line("Service Number",serviceNumber);line("System",system)
+  y+=15;p.typeface=Typeface.DEFAULT_BOLD;c.drawText("Recommendation",40f,y,p);y+=22;p.typeface=Typeface.DEFAULT;(recommendation.ifBlank{"No recommendation entered."}).chunked(75).forEach{if(y<790){c.drawText(it,40f,y,p);y+=18}}
+  y+=30;c.drawText("Technician Signature: __________________________",40f,y,p);y+=35;c.drawText("Manager Signature: _____________________________",40f,y,p);d.finishPage(page);save(d,"TechReport_Service_${safe(siteName)}.pdf")
+ }
+ fun installation(siteName:String,jobNumber:String,date:String,company:String,contactNumber:String,contactPerson:String,address:String,system:String,assets:List<String>){
+  val d=PdfDocument();val page=d.startPage(PdfDocument.PageInfo.Builder(595,842,1).create());val c=page.canvas;val p=Paint();p.textSize=12f
+  p.typeface=Typeface.DEFAULT_BOLD;p.textSize=18f;c.drawText("TECHREPORT INSTALLATION / ASSET REPORT",30f,50f,p);p.typeface=Typeface.DEFAULT;p.textSize=12f;var y=85f
+  fun line(a:String,b:String){if(y<790){c.drawText("$a: $b",35f,y,p);y+=20}}
+  line("Site Name",siteName);line("Job Number",jobNumber);line("Date",date);line("Company / Customer",company);line("Contact Number",contactNumber);line("Contact Person",contactPerson);line("Address",address);line("System",system);y+=15;p.typeface=Typeface.DEFAULT_BOLD;c.drawText("Installed Equipment",35f,y,p);y+=25;p.typeface=Typeface.DEFAULT
+  if(assets.isEmpty())c.drawText("No equipment added.",35f,y,p) else assets.forEachIndexed{i,a->if(y<790){a.chunked(75).forEachIndexed{j,t->if(y<790){c.drawText(if(j==0)"${i+1}. $t" else "   $t",35f,y,p);y+=18}};y+=5}}
+  d.finishPage(page);save(d,"TechReport_Installation_${safe(siteName)}.pdf")
+ }
+ private fun save(d:PdfDocument,name:String){try{val dir=Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS);if(!dir.exists())dir.mkdirs();FileOutputStream(File(dir,name)).use{d.writeTo(it)}}catch(e:Exception){e.printStackTrace()}finally{d.close()}}
+ private fun safe(v:String)=v.ifBlank{"Site"}.replace(Regex("[^A-Za-z0-9._-]"),"_")
 }
