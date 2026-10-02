@@ -83,9 +83,25 @@ class MainActivity:ComponentActivity(){
 @Composable fun ExistingSitesScreen(back:()->Unit){
  val sites=remember{mutableStateListOf<String>()};var name by remember{mutableStateOf("")};var company by remember{mutableStateOf("")};var phone by remember{mutableStateOf("")};var address by remember{mutableStateOf("")}
  AppShell("Existing Sites",back){Text("Add Site",style=MaterialTheme.typography.titleLarge);InputField("Site Name",name){name=it};InputField("Company / Customer",company){company=it};InputField("Contact Number",phone){phone=it};InputField("Address",address){address=it};Button({if(name.isNotBlank()){sites.add("$name | $company | $phone | $address");name="";company="";phone="";address=""}},Modifier.fillMaxWidth()){Text("Save Site")};sites.forEachIndexed{i,s->Card(Modifier.fillMaxWidth().padding(vertical=4.dp)){Row(Modifier.fillMaxWidth().padding(8.dp)){Text(s,Modifier.weight(1f));TextButton({sites.removeAt(i)}){Text("Delete")}}}}}
-@Composable fun TechnicianProfileScreen(back:()->Unit){
- var company by remember{mutableStateOf("")};var name by remember{mutableStateOf("")};var email by remember{mutableStateOf("")};var phone by remember{mutableStateOf("")};var epf by remember{mutableStateOf("")};var pass by remember{mutableStateOf("")}
- AppShell("Technician Profile",back){InputField("Company Name",company){company=it};InputField("Technician Name",name){name=it};InputField("Email",email){email=it};InputField("Phone",phone){phone=it};InputField("EPF",epf){epf=it};InputField("Password",pass){pass=it};Button({},Modifier.fillMaxWidth()){Text("Save Profile")}}
+@Composable
+fun TechnicianProfileScreen(back:()->Unit){
+ var company by remember{mutableStateOf("")}
+ var name by remember{mutableStateOf("")}
+ var email by remember{mutableStateOf("")}
+ var phone by remember{mutableStateOf("")}
+ var epf by remember{mutableStateOf("")}
+ var pass by remember{mutableStateOf("")}
+
+ AppShell("Technician Profile",back){
+  InputField("Company Name",company){company=it}
+  InputField("Technician Name",name){name=it}
+  InputField("Email",email){email=it}
+  InputField("Phone",phone){phone=it}
+  InputField("EPF",epf){epf=it}
+  InputField("Password",pass){pass=it}
+  Button({},Modifier.fillMaxWidth()){Text("Save Profile")}
+ }
+}
 @Composable fun InputField(label:String,value:String,onChange:(String)->Unit)=OutlinedTextField(value,onChange,label={Text(label)},modifier=Modifier.fillMaxWidth().padding(vertical=4.dp))
 @Composable fun DropdownField(label:String,value:String,options:List<String>,onSelected:(String)->Unit){var open by remember{mutableStateOf(false)};Box(Modifier.fillMaxWidth().padding(vertical=4.dp)){OutlinedButton({open=true},Modifier.fillMaxWidth()){Text("$label: $value")};DropdownMenu(open,{open=false}){options.forEach{o->DropdownMenuItem(text={Text(o)},onClick={onSelected(o);open=false})}}}}
 fun today()=SimpleDateFormat("yyyy-MM-dd",Locale.getDefault()).format(Date())
